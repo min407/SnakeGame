@@ -12,11 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const speedSlider = document.getElementById('speedSlider');
     const speedValue = document.getElementById('speedValue');
     
-    // 获取方向控制按钮
-    const upBtn = document.getElementById('upBtn');
-    const downBtn = document.getElementById('downBtn');
-    const leftBtn = document.getElementById('leftBtn');
-    const rightBtn = document.getElementById('rightBtn');
+
     
     // 游戏配置
     const gridSize = 20; // 网格大小
@@ -78,11 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 键盘事件监听
     document.addEventListener('keydown', changeDirection);
     
-    // 方向按钮事件监听
-    upBtn.addEventListener('click', () => changeDirectionByButton('ArrowUp'));
-    downBtn.addEventListener('click', () => changeDirectionByButton('ArrowDown'));
-    leftBtn.addEventListener('click', () => changeDirectionByButton('ArrowLeft'));
-    rightBtn.addEventListener('click', () => changeDirectionByButton('ArrowRight'));
+
     
     // 触摸事件监听
     canvas.addEventListener('touchstart', handleTouchStart);
@@ -263,12 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // 改变蛇的方向 - 按钮控制
-    function changeDirectionByButton(direction) {
-        // 模拟键盘事件
-        const event = { key: direction };
-        changeDirection(event);
-    }
+
     
     // 处理触摸开始事件
     function handleTouchStart(event) {
@@ -299,10 +286,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 水平滑动
             if (diffX > 0) {
                 // 向左滑动
-                changeDirectionByButton('ArrowLeft');
+                changeDirection({ key: 'ArrowLeft' });
             } else {
                 // 向右滑动
-                changeDirectionByButton('ArrowRight');
+                changeDirection({ key: 'ArrowRight' });
             }
             // 重置触摸起始点，避免连续触发
             touchStartX = 0;
@@ -311,10 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 垂直滑动
             if (diffY > 0) {
                 // 向上滑动
-                changeDirectionByButton('ArrowUp');
+                changeDirection({ key: 'ArrowUp' });
             } else {
                 // 向下滑动
-                changeDirectionByButton('ArrowDown');
+                changeDirection({ key: 'ArrowDown' });
             }
             // 重置触摸起始点，避免连续触发
             touchStartX = 0;
@@ -349,19 +336,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // 水平方向点击
             if (diffX > 0) {
                 // 右侧区域
-                changeDirectionByButton('ArrowRight');
+                changeDirection({ key: 'ArrowRight' });
             } else {
                 // 左侧区域
-                changeDirectionByButton('ArrowLeft');
+                changeDirection({ key: 'ArrowLeft' });
             }
         } else {
             // 垂直方向点击
             if (diffY > 0) {
                 // 下方区域
-                changeDirectionByButton('ArrowDown');
+                changeDirection({ key: 'ArrowDown' });
             } else {
                 // 上方区域
-                changeDirectionByButton('ArrowUp');
+                changeDirection({ key: 'ArrowUp' });
             }
         }
     }
