@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const speedSlider = document.getElementById('speedSlider');
     const speedValue = document.getElementById('speedValue');
     
+    // 获取方向控制按钮
+    const upBtn = document.getElementById('upBtn');
+    const downBtn = document.getElementById('downBtn');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+    
     // 游戏配置
     const gridSize = 20; // 网格大小
     const tileCount = canvas.width / gridSize; // 网格数量
@@ -71,6 +77,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 键盘事件监听
     document.addEventListener('keydown', changeDirection);
+    
+    // 方向按钮事件监听
+    upBtn.addEventListener('click', () => changeDirectionByButton('ArrowUp'));
+    downBtn.addEventListener('click', () => changeDirectionByButton('ArrowDown'));
+    leftBtn.addEventListener('click', () => changeDirectionByButton('ArrowLeft'));
+    rightBtn.addEventListener('click', () => changeDirectionByButton('ArrowRight'));
+    
+    // 触摸事件监听
+    canvas.addEventListener('touchstart', handleTouchStart);
+    canvas.addEventListener('touchmove', handleTouchMove);
+    
+    // 点击事件监听
+    canvas.addEventListener('click', handleCanvasClick);
+    
+    // 触摸坐标
+    let touchStartX = 0;
+    let touchStartY = 0;
     
     // 初始化游戏
     function initGame() {
@@ -204,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // 改变蛇的方向
+    // 改变蛇的方向 - 键盘控制
     function changeDirection(event) {
         // 防止蛇反向移动
         switch (event.key) {
@@ -237,6 +260,109 @@ document.addEventListener('DOMContentLoaded', () => {
         // 如果游戏还没开始但按了方向键，自动开始游戏
         if (!gameRunning && !gameOver && (nextVelocityX !== 0 || nextVelocityY !== 0)) {
             startGame();
+        }
+    }
+    
+    // 改变蛇的方向 - 按钮控制
+    function changeDirectionByButton(direction) {
+        // 模拟键盘事件
+        const event = { key: direction };
+        changeDirection(event);
+    }
+    
+    // 处理触摸开始事件
+    function handleTouchStart(event) {
+        event.preventDefault();
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+    }
+    
+    // 处理触摸移动事件
+    function handleTouchMove(event) {
+        if (!touchStartX || !touchStartY) {
+            return;
+        }
+        
+        event.preventDefault();
+        
+        const touchEndX = event.touches[0].clientX;
+        const touchEndY = event.touches[0].clientY;
+        
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+        
+        // 设置最小滑动距离阈值，避免误触
+        const minSwipeDistance = 30;
+        
+        // 判断滑动方向，只有滑动距离超过阈值才改变方向
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > minSwipeDistance) {
+            // 水平滑动
+            if (diffX > 0) {
+                // 向左滑动
+                changeDirectionByButton('ArrowLeft');
+            } else {
+                // 向右滑动
+                changeDirectionByButton('ArrowRight');
+            }
+            // 重置触摸起始点，避免连续触发
+            touchStartX = 0;
+            touchStartY = 0;
+        } else if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > minSwipeDistance) {
+            // 垂直滑动
+            if (diffY > 0) {
+                // 向上滑动
+                changeDirectionByButton('ArrowUp');
+            } else {
+                // 向下滑动
+                changeDirectionByButton('ArrowDown');
+            }
+            // 重置触摸起始点，避免连续触发
+            touchStartX = 0;
+            touchStartY = 0;
+        }
+        // 如果滑动距离不够，不重置触摸起始点，等待更大的滑动距离
+    }
+    
+    // 处理画布点击事件
+    function handleCanvasClick(event) {
+        if (!gameRunning) {
+            // 如果游戏未运行，点击任何区域都开始游戏
+            startGame();
+            return;
+        }
+        
+        // 获取点击位置相对于画布的坐标
+        const rect = canvas.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+        
+        // 计算画布中心点
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        
+        // 计算点击位置相对于中心的偏移
+        const diffX = clickX - centerX;
+        const diffY = clickY - centerY;
+        
+        // 判断点击区域
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            // 水平方向点击
+            if (diffX > 0) {
+                // 右侧区域
+                changeDirectionByButton('ArrowRight');
+            } else {
+                // 左侧区域
+                changeDirectionByButton('ArrowLeft');
+            }
+        } else {
+            // 垂直方向点击
+            if (diffY > 0) {
+                // 下方区域
+                changeDirectionByButton('ArrowDown');
+            } else {
+                // 上方区域
+                changeDirectionByButton('ArrowUp');
+            }
         }
     }
     
