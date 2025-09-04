@@ -458,139 +458,179 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 绘制蛇
     function drawSnake() {
-        // 创建渐变色
-        const headGradient = ctx.createLinearGradient(
-            snake[0].x * gridSize, 
-            snake[0].y * gridSize, 
-            snake[0].x * gridSize + gridSize, 
-            snake[0].y * gridSize + gridSize
-        );
-        headGradient.addColorStop(0, '#6a11cb');
-        headGradient.addColorStop(1, '#2575fc');
-        
-        const bodyGradient = ctx.createLinearGradient(
-            0, 0, canvas.width, canvas.height
-        );
-        bodyGradient.addColorStop(0, '#8e2de2');
-        bodyGradient.addColorStop(1, '#4a00e0');
-        
-        // 绘制蛇身
-        for (let i = 1; i < snake.length; i++) {
+        // 绘制蛇身 - 从尾部到头部
+        for (let i = snake.length - 1; i >= 0; i--) {
             ctx.save();
             
-            // 圆角矩形路径
-            const radius = 5;
             const x = snake[i].x * gridSize;
             const y = snake[i].y * gridSize;
+            const centerX = x + gridSize / 2;
+            const centerY = y + gridSize / 2;
             
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + gridSize - radius, y);
-            ctx.quadraticCurveTo(x + gridSize, y, x + gridSize, y + radius);
-            ctx.lineTo(x + gridSize, y + gridSize - radius);
-            ctx.quadraticCurveTo(x + gridSize, y + gridSize, x + gridSize - radius, y + gridSize);
-            ctx.lineTo(x + radius, y + gridSize);
-            ctx.quadraticCurveTo(x, y + gridSize, x, y + gridSize - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            
-            ctx.fillStyle = bodyGradient;
-            ctx.shadowColor = 'rgba(106, 17, 203, 0.2)';
-            ctx.shadowBlur = 5;
-            ctx.fill();
+            if (i === 0) {
+                // 绘制蛇头 - 更大更突出
+                const headSize = gridSize * 0.9;
+                const headRadius = headSize / 2;
+                
+                // 蛇头渐变
+                const headGradient = ctx.createRadialGradient(
+                    centerX, centerY, 0,
+                    centerX, centerY, headRadius
+                );
+                headGradient.addColorStop(0, '#ff6b6b');
+                headGradient.addColorStop(0.7, '#ee5a52');
+                headGradient.addColorStop(1, '#c44569');
+                
+                // 绘制蛇头圆形
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, headRadius, 0, Math.PI * 2);
+                ctx.fillStyle = headGradient;
+                ctx.fill();
+                
+                // 添加蛇头边框
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+            } else {
+                // 绘制蛇身 - 圆形，大小递减
+                const bodySize = gridSize * (0.8 - (i * 0.02)); // 身体逐渐变小
+                const bodyRadius = Math.max(bodySize / 2, gridSize * 0.3); // 最小尺寸限制
+                
+                // 蛇身渐变 - 根据位置变化颜色
+                const bodyGradient = ctx.createRadialGradient(
+                    centerX, centerY, 0,
+                    centerX, centerY, bodyRadius
+                );
+                const intensity = Math.max(0.3, 1 - (i * 0.1));
+                bodyGradient.addColorStop(0, `rgba(78, 205, 196, ${intensity})`);
+                bodyGradient.addColorStop(0.7, `rgba(68, 160, 141, ${intensity * 0.8})`);
+                bodyGradient.addColorStop(1, `rgba(9, 54, 55, ${intensity * 0.6})`);
+                
+                // 绘制蛇身圆形
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, bodyRadius, 0, Math.PI * 2);
+                ctx.fillStyle = bodyGradient;
+                ctx.fill();
+                
+                // 添加蛇身边框
+                ctx.strokeStyle = `rgba(255, 255, 255, ${intensity * 0.6})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
             
             ctx.restore();
         }
         
-        // 绘制蛇头
-        ctx.save();
-        const headRadius = 5;
+        // 绘制蛇眼 - 在蛇头上
         const headX = snake[0].x * gridSize;
         const headY = snake[0].y * gridSize;
+        const headCenterX = headX + gridSize / 2;
+        const headCenterY = headY + gridSize / 2;
+        const eyeSize = gridSize * 0.15;
         
-        ctx.beginPath();
-        ctx.moveTo(headX + headRadius, headY);
-        ctx.lineTo(headX + gridSize - headRadius, headY);
-        ctx.quadraticCurveTo(headX + gridSize, headY, headX + gridSize, headY + headRadius);
-        ctx.lineTo(headX + gridSize, headY + gridSize - headRadius);
-        ctx.quadraticCurveTo(headX + gridSize, headY + gridSize, headX + gridSize - headRadius, headY + gridSize);
-        ctx.lineTo(headX + headRadius, headY + gridSize);
-        ctx.quadraticCurveTo(headX, headY + gridSize, headX, headY + gridSize - headRadius);
-        ctx.lineTo(headX, headY + headRadius);
-        ctx.quadraticCurveTo(headX, headY, headX + headRadius, headY);
-        ctx.closePath();
-        
-        ctx.fillStyle = headGradient;
-        ctx.shadowColor = 'rgba(106, 17, 203, 0.5)';
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        
-        // 绘制蛇眼
-        const eyeSize = gridSize * 0.2;
-        ctx.fillStyle = 'white';
-        ctx.shadowBlur = 0;
+        ctx.save();
         
         // 根据蛇的移动方向绘制眼睛
         if (velocityX === 1) { // 向右
+            // 右眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.3, eyeSize, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.7, eyeSize, 0, Math.PI * 2);
+            ctx.arc(headCenterX + gridSize * 0.15, headCenterY - gridSize * 0.1, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX + gridSize * 0.18, headCenterY - gridSize * 0.1, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
             
-            // 眼球
-            ctx.fillStyle = '#333';
+            // 左眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.75, headY + gridSize * 0.3, eyeSize/2, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.75, headY + gridSize * 0.7, eyeSize/2, 0, Math.PI * 2);
+            ctx.arc(headCenterX + gridSize * 0.15, headCenterY + gridSize * 0.1, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX + gridSize * 0.18, headCenterY + gridSize * 0.1, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
         } else if (velocityX === -1) { // 向左
+            // 右眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.3, headY + gridSize * 0.3, eyeSize, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.3, headY + gridSize * 0.7, eyeSize, 0, Math.PI * 2);
+            ctx.arc(headCenterX - gridSize * 0.15, headCenterY - gridSize * 0.1, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX - gridSize * 0.18, headCenterY - gridSize * 0.1, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
             
-            // 眼球
-            ctx.fillStyle = '#333';
+            // 左眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.25, headY + gridSize * 0.3, eyeSize/2, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.25, headY + gridSize * 0.7, eyeSize/2, 0, Math.PI * 2);
+            ctx.arc(headCenterX - gridSize * 0.15, headCenterY + gridSize * 0.1, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX - gridSize * 0.18, headCenterY + gridSize * 0.1, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
         } else if (velocityY === -1) { // 向上
+            // 右眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.3, headY + gridSize * 0.3, eyeSize, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.3, eyeSize, 0, Math.PI * 2);
+            ctx.arc(headCenterX - gridSize * 0.1, headCenterY - gridSize * 0.15, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX - gridSize * 0.1, headCenterY - gridSize * 0.18, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
             
-            // 眼球
-            ctx.fillStyle = '#333';
+            // 左眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.3, headY + gridSize * 0.25, eyeSize/2, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.25, eyeSize/2, 0, Math.PI * 2);
+            ctx.arc(headCenterX + gridSize * 0.1, headCenterY - gridSize * 0.15, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX + gridSize * 0.1, headCenterY - gridSize * 0.18, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
         } else if (velocityY === 1) { // 向下
+            // 右眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.3, headY + gridSize * 0.7, eyeSize, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.7, eyeSize, 0, Math.PI * 2);
+            ctx.arc(headCenterX - gridSize * 0.1, headCenterY + gridSize * 0.15, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX - gridSize * 0.1, headCenterY + gridSize * 0.18, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
             
-            // 眼球
-            ctx.fillStyle = '#333';
+            // 左眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.3, headY + gridSize * 0.75, eyeSize/2, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.75, eyeSize/2, 0, Math.PI * 2);
+            ctx.arc(headCenterX + gridSize * 0.1, headCenterY + gridSize * 0.15, eyeSize, 0, Math.PI * 2);
             ctx.fill();
-        } else { // 默认（游戏开始前）
+            ctx.fillStyle = '#000';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.3, eyeSize, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.7, headY + gridSize * 0.7, eyeSize, 0, Math.PI * 2);
+            ctx.arc(headCenterX + gridSize * 0.1, headCenterY + gridSize * 0.18, eyeSize * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+        } else { // 默认（游戏开始前）- 向右看
+            // 右眼
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(headCenterX + gridSize * 0.15, headCenterY - gridSize * 0.1, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX + gridSize * 0.18, headCenterY - gridSize * 0.1, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
             
-            // 眼球
-            ctx.fillStyle = '#333';
+            // 左眼
+            ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(headX + gridSize * 0.75, headY + gridSize * 0.3, eyeSize/2, 0, Math.PI * 2);
-            ctx.arc(headX + gridSize * 0.75, headY + gridSize * 0.7, eyeSize/2, 0, Math.PI * 2);
+            ctx.arc(headCenterX + gridSize * 0.15, headCenterY + gridSize * 0.1, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(headCenterX + gridSize * 0.18, headCenterY + gridSize * 0.1, eyeSize * 0.6, 0, Math.PI * 2);
             ctx.fill();
         }
         
@@ -607,10 +647,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.save();
         
         // 创建渐变
-        const gradient = ctx.createLinearGradient(x, y, x + size, y + size);
-        gradient.addColorStop(0, '#FF3CAC');
-        gradient.addColorStop(0.5, '#784BA0');
-        gradient.addColorStop(1, '#2B86C5');
+        const gradient = ctx.createRadialGradient(x + size/2, y + size/2, 0, x + size/2, y + size/2, size/2);
+        gradient.addColorStop(0, '#ffd700');
+        gradient.addColorStop(0.5, '#ff6b35');
+        gradient.addColorStop(1, '#f7931e');
         
         // 绘制圆角矩形
         ctx.beginPath();
